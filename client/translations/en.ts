@@ -944,6 +944,44 @@ Learn more info here:</translation>
 
 <context>
     <name>FirstRun</name>
+    <message>
+        <source>Welcome to Estonian eID application!</source>
+        <translation>Welcome to Estonian eID application!</translation>
+    </message>
+    <message>
+        <source>DigiDoc is designed for managing eIDs in Estonia and is the official application for signing and encryption of documents</source>
+        <translation>DigiDoc is designed for managing eIDs in Estonia and is the official application
+for signing and encryption of documents</translation>
+    </message>
+
+    <message>
+        <source>The DigiDoc application allows you:</source>
+        <translation>The DigiDoc application allows you:</translation>
+    </message>
+    <message>
+        <source>Sign documents</source>
+        <translation>Sign documents</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for signing a document</source>
+        <translation>A brief summary and introductory text for signing a document should come here with a piece of text. Preferably no more than 2-4 sentences.</translation>
+    </message>
+    <message>
+        <source>Encrypt documents</source>
+        <translation>Encrypt documents</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for encrypting documents</source>
+        <translation>A brief summary and introductory text for encrypting documents should come here with a piece of text. Preferably no more than 2-4 sentences.</translation>
+    </message>
+    <message>
+        <source>Manage your IDs</source>
+        <translation>Manage your IDs</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for Managing your IDs</source>
+        <translation>A brief summary and introductory text for Managing your IDs should come here with a piece of text. Preferably no more than 2-4 sentences.</translation>
+    </message>
 
     <message>
         <source>CONTINUE</source>
@@ -1224,7 +1262,7 @@ Control code: %1</translation>
 
     <message>
         <source>ConditionsChangePIN2WithPUK</source>
-        <translation>&lt;ul&gt;		
+        <translation>&lt;ul&gt;
 &lt;li&gt;New PIN2 must be different from current PIN2.&lt;/li&gt;
 &lt;li&gt;PIN2 code is used to digitally sign documents.&lt;/li&gt;
 &lt;li&gt;If you have forgotten PIN2, but know PUK, then &lt;br&gt;

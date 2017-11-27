@@ -935,6 +935,44 @@ Learn more info here:</source>
 
 <context>
     <name>FirstRun</name>
+    <message>
+        <source>Welcome to Estonian eID application!</source>
+        <translation>Добро пожаловать в приложение eID для DigiDoc в Эстонии!</translation>
+    </message>
+    <message>
+        <source>DigiDoc is designed for managing eIDs in Estonia and is the official application for signing and encryption of documents</source>
+        <translation>DigiDoc предназначен для управления eID в Эстонии и является
+официальным заявлением о подписании и шифровании документов</translation>
+    </message>
+
+    <message>
+        <source>The DigiDoc application allows you:</source>
+        <translation>Приложение DigiDoc позволяет вам:</translation>
+    </message>
+    <message>
+        <source>Sign documents</source>
+        <translation>Подписать документы</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for signing a document</source>
+        <translation>Краткий сводный и вводный текст для подписания документа должен прийти сюда с текстом. Предпочтительно не более 2-4 предложений.</translation>
+    </message>
+    <message>
+        <source>Encrypt documents</source>
+        <translation>Шифровать документы</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for encrypting documents</source>
+        <translation>Краткий обзор и вводный текст для шифрования документов должен прийти сюда с текстом. Предпочтительно не более 2-4 предложений.</translation>
+    </message>
+    <message>
+        <source>Manage your IDs</source>
+        <translation>Управление идентификаторами</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for Managing your IDs</source>
+        <translation>Краткий обзор и вводный текст для управления вашими идентификаторами должен прийти сюда с текстом. Предпочтительно не более 2-4 предложений.</translation>
+    </message>
 
     <message>
         <source>CONTINUE</source>

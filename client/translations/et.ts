@@ -944,6 +944,46 @@ Rohkem infot leiate siit:</translation>
 
 <context>
     <name>FirstRun</name>
+    <message>
+        <source>Welcome to Estonian eID application!</source>
+        <translation>Tere tulemast eesti eID rakenduse DigiDoc kasutajaks!</translation>
+    </message>
+    <message>
+        <source>DigiDoc is designed for managing eIDs in Estonia and is the official application for signing and encryption of documents</source>
+        <translation>DigiDoc on loodud eesti eID-de haldamiseks ja on ametlik rakendus dokumentide
+digitaalseks allkirjastamiseks ja krüpteerimiseks</translation>
+    </message>
+
+    <message>
+        <source>The DigiDoc application allows you:</source>
+        <translation>DigiDoc rakendus võimaldab sul:</translation>
+    </message>
+    <message>
+        <source>Sign documents</source>
+        <translation>Dokumente allkirjastada</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for signing a document</source>
+        <translation>Dokumente allkirjastamise lühike kokkuvõttev ja tutvustav tekst peaks tulema siia tekstilõiku. Eelistatavalt mitte rohkem kui 2-4 lauset.</translation>
+    </message>
+    <message>
+        <source>Encrypt documents</source>
+        <translation>Dokumente krüpteerida</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for encrypting documents</source>
+        <translation>Dokumentide krüpteerimise lühike kokkuvõttev ja tutvustav tekst peaks tulema siia tekstilõiku. Eelistatavalt mitte rohkem kui 2-4 lauset.</translation>
+    </message>
+    <message>
+        <source>Manage your IDs</source>
+        <translation>Oma ID-sid hallata</translation>
+    </message>
+    <message>
+        <source>A brief summary and introductory text for Managing your IDs</source>
+        <translation>Oma ID-sid haldamise lühike kokkuvõttev ja tutvustav tekst peaks tulema siia tekstilõiku. Eelistatavalt mitte rohkem kui 2-4 lauset.</translation>
+    </message>
+
+
 
     <message>
         <source>CONTINUE</source>

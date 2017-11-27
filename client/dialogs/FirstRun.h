@@ -30,12 +30,12 @@ namespace Ui {
 class FirstRun;
 }
 
-class ArrowKeyFilter : public QObject
-{
-	Q_OBJECT
-protected:
-	bool eventFilter(QObject* obj, QEvent* event) override;
-};
+//class ArrowKeyFilter : public QObject
+//{
+//	Q_OBJECT
+//protected:
+//	bool eventFilter(QObject* obj, QEvent* event) override;
+//};
 
 
 class FirstRun : public QDialog
@@ -50,22 +50,6 @@ signals:
 	void langChanged(const QString& lang);
 
 private:
-	enum View
-	{
-		Language,
-		Intro,
-		Signing,
-		Encryption,
-		MyEid
-	};
-
-	void showDetails();
-	void navigate( bool forward );
-	void toPage( View toPage );
 	
 	Ui::FirstRun *ui;
-
-	View page;
-
-	friend class ArrowKeyFilter;
 };
