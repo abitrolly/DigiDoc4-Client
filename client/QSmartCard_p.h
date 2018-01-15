@@ -21,6 +21,7 @@
 
 #include <common/QPCSC.h>
 #include <common/SslCertificate.h>
+#include <common/TokenData.h>
 
 #include <QtCore/QMutex>
 #include <QtCore/QStringList>
@@ -39,6 +40,7 @@ public:
 	QSmartCard::ErrorType handlePinResult(QPCSCReader *reader, const QPCSCReader::Result &response, bool forceUpdate);
 	quint16 language() const;
 	static QHash<quint8,QByteArray> parseFCI(const QByteArray &data);
+	TokenData token(const QStringList &cards, QSmartCardData::PinType pinType);
 	bool updateCounters(QPCSCReader *reader, QSmartCardDataPrivate *d);
 
 	static QByteArray sign(const unsigned char *dgst, int digst_len, QSmartCardPrivate *d);
@@ -48,7 +50,6 @@ public:
 		const BIGNUM *inv, const BIGNUM *rp, EC_KEY *eckey);
 
 	QSharedPointer<QPCSCReader> reader;
-	QMutex			m;
 	QSmartCardData	t;
 	QMap<QString, QSharedPointer<QCardInfo>> cache;
 	volatile bool	terminate = false;

@@ -18,6 +18,7 @@
  */
 
 #include "QSigner.h"
+#include "QCardLock.h"
 
 #include "Application.h"
 
@@ -36,6 +37,7 @@ class QWin;
 #include <QtCore/QEventLoop>
 #include <QtCore/QStringList>
 #include <QtCore/QSysInfo>
+#include <QDebug>
 #include <QtNetwork/QSslKey>
 
 #include <openssl/obj_mac.h>
@@ -44,7 +46,7 @@ class QWin;
 template <class T>
 constexpr typename std::add_const<T>::type& qAsConst(T& t) noexcept
 {
-        return t;
+	return t;
 }
 #endif
 
@@ -55,27 +57,21 @@ public:
 	QWin			*win = nullptr;
 	QPKCS11Stack	*pkcs11 = nullptr;
 	TokenData		auth, sign;
-	volatile bool	terminate = false;
-	QAtomicInt		count;
 };
 
 using namespace digidoc;
 
 QSigner::QSigner( ApiType api, QObject *parent )
-:	QThread( parent )
-,	d( new QSignerPrivate )
+:	d( new QSignerPrivate )
 {
 	d->api = api;
 	d->auth.setCard( "loading" );
 	d->sign.setCard( "loading" );
 	connect(this, &QSigner::error, this, &QSigner::showWarning);
-	start();
 }
 
 QSigner::~QSigner()
 {
-	d->terminate = true;
-	wait();
 	delete d;
 }
 
@@ -90,17 +86,16 @@ X509Cert QSigner::cert() const
 QSigner::ErrorCode QSigner::decrypt(const QByteArray &in, QByteArray &out, const QString &digest, int keySize,
 	const QByteArray &algorithmID, const QByteArray &partyUInfo, const QByteArray &partyVInfo)
 {
-	if( d->count.loadAcquire() > 0 )
+	if(!QCardLock::instance().exclusiveTryLock())
 	{
 		Q_EMIT error( tr("Signing/decrypting is already in progress another window.") );
 		return DecryptFailed;
 	}
 
-	d->count.ref();
 	if( !d->auth.cards().contains( d->auth.card() ) || d->auth.cert().isNull() )
 	{
 		Q_EMIT error( tr("Authentication certificate is not selected.") );
-		d->count.deref();
+		QCardLock::instance().exclusiveUnlock();
 		return DecryptFailed;
 	}
 
@@ -111,10 +106,10 @@ QSigner::ErrorCode QSigner::decrypt(const QByteArray &in, QByteArray &out, const
 		{
 		case QPKCS11::PinOK: break;
 		case QPKCS11::PinCanceled:
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			return PinCanceled;
 		case QPKCS11::PinIncorrect:
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			reloadauth();
 			if( !(d->auth.flags() & TokenData::PinLocked) )
 			{
@@ -123,11 +118,11 @@ QSigner::ErrorCode QSigner::decrypt(const QByteArray &in, QByteArray &out, const
 			}
 			// else pin locked, fall through
 		case QPKCS11::PinLocked:
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			Q_EMIT error( QPKCS11::errorString( status ) );
 			return PinLocked;
 		default:
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			Q_EMIT error( tr("Failed to login token") + " " + QPKCS11::errorString( status ) );
 			return DecryptFailed;
 		}
@@ -147,7 +142,7 @@ QSigner::ErrorCode QSigner::decrypt(const QByteArray &in, QByteArray &out, const
 			out = d->win->deriveConcatKDF(in, digest, keySize, algorithmID, partyUInfo, partyVInfo);
 		if(d->win->lastError() == QWin::PinCanceled)
 		{
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			return PinCanceled;
 		}
 	}
@@ -155,34 +150,13 @@ QSigner::ErrorCode QSigner::decrypt(const QByteArray &in, QByteArray &out, const
 
 	if( out.isEmpty() )
 		Q_EMIT error( tr("Failed to decrypt document") );
-	d->count.deref();
+	QCardLock::instance().exclusiveUnlock();
 	reloadauth();
 	return !out.isEmpty() ? DecryptOK : DecryptFailed;
 }
 
-void QSigner::reloadauth() const
+void QSigner::init()
 {
-	QEventLoop e;
-	QObject::connect(this, &QSigner::authDataChanged, &e, &QEventLoop::quit);
-	d->count.ref();
-	d->auth.setCert( QSslCertificate() );
-	d->count.deref();
-	e.exec();
-}
-
-void QSigner::reloadsign() const
-{
-	QEventLoop e;
-	QObject::connect(this, &QSigner::signDataChanged, &e, &QEventLoop::quit);
-	d->count.ref();
-	d->sign.setCert( QSslCertificate() );
-	d->count.deref();
-	e.exec();
-}
-
-void QSigner::run()
-{
-	d->terminate = false;
 	d->auth.clear();
 	d->auth.setCard( "loading" );
 	d->sign.clear();
@@ -198,153 +172,41 @@ void QSigner::run()
 	}
 
 	QString driver = qApp->confValue( Application::PKCS11Module ).toString();
-	while( !d->terminate )
+	if( d->pkcs11 && !d->pkcs11->isLoaded() && !d->pkcs11->load( driver ) )
 	{
-		if( d->pkcs11 && !d->pkcs11->isLoaded() && !d->pkcs11->load( driver ) )
-		{
-			Q_EMIT error( tr("Failed to load PKCS#11 module") + "\n" + driver );
-			return;
-		}
-
-		if( !d->count.loadAcquire() )
-		{
-			d->count.deref();
-			TokenData aold = d->auth, at = aold;
-			TokenData sold = d->sign, st = sold;
-			QStringList acards, scards, readers;
-#ifdef Q_OS_WIN
-			QWin::Certs certs;
-			if(d->win)
-			{
-				certs = d->win->certs();
-				for(QWin::Certs::const_iterator i = certs.constBegin(); i != certs.constEnd(); ++i)
-				{
-					if(i.key().keyUsage().contains(SslCertificate::KeyEncipherment) ||
-						i.key().keyUsage().contains(SslCertificate::KeyAgreement))
-						acards << i.value();
-					if(i.key().keyUsage().contains(SslCertificate::NonRepudiation))
-						scards << i.value();
-				}
-				readers << d->win->readers();
-			}
-#endif
-			QList<TokenData> pkcs11;
-			if( d->pkcs11 && d->pkcs11->isLoaded() )
-			{
-				pkcs11 = d->pkcs11->tokens();
-				for(const TokenData &t: qAsConst(pkcs11))
-				{
-					SslCertificate c( t.cert() );
-					if(c.keyUsage().contains(SslCertificate::KeyEncipherment) ||
-						c.keyUsage().contains(SslCertificate::KeyAgreement))
-						acards << t.card();
-					if( c.keyUsage().contains( SslCertificate::NonRepudiation ) )
-						scards << t.card();
-				}
-				acards.removeDuplicates();
-				scards.removeDuplicates();
-				readers = d->pkcs11->readers();
-			}
-
-			std::sort( acards.begin(), acards.end(), TokenData::cardsOrder );
-			std::sort( scards.begin(), scards.end(), TokenData::cardsOrder );
-			std::sort( readers.begin(), readers.end() );
-			at.setCards( acards );
-			at.setReaders( readers );
-			st.setCards( scards );
-			st.setReaders( readers );
-
-			// check if selected card is still in slot
-			if( !at.card().isEmpty() && !acards.contains( at.card() ) )
-			{
-				at.setCard( QString() );
-				at.setCert( QSslCertificate() );
-			}
-			if( !st.card().isEmpty() && !scards.contains( st.card() ) )
-			{
-				st.setCard( QString() );
-				st.setCert( QSslCertificate() );
-			}
-
-			// if none is selected select first from cardlist
-			if( at.card().isEmpty() && !acards.isEmpty() )
-				at.setCard( acards.first() );
-			if( st.card().isEmpty() && !scards.isEmpty() )
-				st.setCard( scards.first() );
-
-			if( acards.contains( at.card() ) && at.cert().isNull() ) // read auth cert
-			{
-#ifdef Q_OS_WIN
-				if(d->win)
-				{
-					for(QWin::Certs::const_iterator i = certs.constBegin(); i != certs.constEnd(); ++i)
-					{
-						if(i.value() == at.card() &&
-							(i.key().keyUsage().contains(SslCertificate::KeyEncipherment) ||
-							i.key().keyUsage().contains(SslCertificate::KeyAgreement)))
-						{
-							at.setCert(i.key());
-							break;
-						}
-					}
-				}
-				else
-#endif
-				{
-					for(const TokenData &i: qAsConst(pkcs11))
-					{
-						if(i.card() == at.card() &&
-							(SslCertificate(i.cert()).keyUsage().contains(SslCertificate::KeyEncipherment) ||
-							SslCertificate(i.cert()).keyUsage().contains(SslCertificate::KeyAgreement)))
-						{
-							at.setCert( i.cert() );
-							at.setFlags( i.flags() );
-							break;
-						}
-					}
-				}
-			}
-
-			if( scards.contains( st.card() ) && st.cert().isNull() ) // read sign cert
-			{
-#ifdef Q_OS_WIN
-				if(d->win)
-				{
-					for(QWin::Certs::const_iterator i = certs.constBegin(); i != certs.constEnd(); ++i)
-					{
-						if(i.value() == st.card() &&
-							i.key().keyUsage().contains(SslCertificate::NonRepudiation))
-						{
-							st.setCert(i.key());
-							break;
-						}
-					}
-				}
-				else
-#endif
-				{
-					for(const TokenData &i: qAsConst(pkcs11))
-					{
-						if( i.card() == st.card() && SslCertificate( i.cert() ).keyUsage().contains( SslCertificate::NonRepudiation ) )
-						{
-							st.setCert( i.cert() );
-							st.setFlags( i.flags() );
-							break;
-						}
-					}
-				}
-			}
-
-			// update data if something has changed
-			if( aold != at )
-				Q_EMIT authDataChanged(d->auth = at);
-			if( sold != st )
-				Q_EMIT signDataChanged(d->sign = st);
-			d->count.ref();
-		}
-
-		sleep( 5 );
+		Q_EMIT error( tr("Failed to load PKCS#11 module") + "\n" + driver );
+		return;
 	}
+
+
+}
+
+void QSigner::reloadauth() const
+{
+	QEventLoop e;
+	QObject::connect(this, &QSigner::authDataChanged, &e, &QEventLoop::quit);
+	{
+		QCardLocker locker;
+		d->auth.setCert( QSslCertificate() );
+	}
+	e.exec();
+}
+
+void QSigner::reloadsign() const
+{
+	QEventLoop e;
+	QObject::connect(this, &QSigner::signDataChanged, &e, &QEventLoop::quit);
+	{
+		QCardLocker locker;
+		d->sign.setCert( QSslCertificate() );
+	}
+	e.exec();
+}
+
+void QSigner::select(const TokenData &authToken, const TokenData &signToken)
+{
+	Q_EMIT signDataChanged(d->auth = authToken);
+	Q_EMIT signDataChanged(d->sign = signToken);
 }
 
 void QSigner::selectAuthCard( const QString &card )
@@ -368,13 +230,12 @@ void QSigner::showWarning( const QString &msg )
 
 std::vector<unsigned char> QSigner::sign(const std::string &method, const std::vector<unsigned char> &digest ) const
 {
-	if( d->count.loadAcquire() > 0 )
+	if(!QCardLock::instance().exclusiveTryLock())
 		throwException( tr("Signing/decrypting is already in progress another window."), Exception::General, __LINE__ );
 
-	d->count.ref();
 	if( !d->sign.cards().contains( d->sign.card() ) || d->sign.cert().isNull() )
 	{
-		d->count.deref();
+		QCardLock::instance().exclusiveUnlock();
 		throwException( tr("Signing certificate is not selected."), Exception::General, __LINE__ );
 	}
 
@@ -392,17 +253,17 @@ std::vector<unsigned char> QSigner::sign(const std::string &method, const std::v
 		{
 		case QPKCS11::PinOK: break;
 		case QPKCS11::PinCanceled:
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			throwException( tr("Failed to login token") + " " + QPKCS11::errorString( status ), Exception::PINCanceled, __LINE__ );
 		case QPKCS11::PinIncorrect:
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			throwException( tr("Failed to login token") + " " + QPKCS11::errorString( status ), Exception::PINIncorrect, __LINE__ );
 		case QPKCS11::PinLocked:
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			reloadsign();
 			throwException( tr("Failed to login token") + " " + QPKCS11::errorString( status ), Exception::PINLocked, __LINE__ );
 		default:
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			throwException( tr("Failed to login token") + " " + QPKCS11::errorString( status ), Exception::General, __LINE__ );
 		}
 
@@ -416,13 +277,13 @@ std::vector<unsigned char> QSigner::sign(const std::string &method, const std::v
 		sig = d->win->sign(type, QByteArray::fromRawData((const char*)digest.data(), int(digest.size())));
 		if(d->win->lastError() == QWin::PinCanceled)
 		{
-			d->count.deref();
+			QCardLock::instance().exclusiveUnlock();
 			throwException(tr("Failed to login token"), Exception::PINCanceled, __LINE__);
 		}
 	}
 #endif
 
-	d->count.deref();
+	QCardLock::instance().exclusiveUnlock();
 	reloadsign();
 	if( sig.isEmpty() )
 		throwException( tr("Failed to sign document"), Exception::General, __LINE__ );
@@ -439,3 +300,18 @@ void QSigner::throwException( const QString &msg, Exception::ExceptionCode code,
 
 TokenData QSigner::tokenauth() const { return d->auth; }
 TokenData QSigner::tokensign() const { return d->sign; }
+
+void QSigner::update(const SslCertificate &authCert, const SslCertificate &signCert)
+{
+	if(d->auth.cert().isNull())
+	{
+		d->auth.setCert(authCert);
+		Q_EMIT authDataChanged(d->auth);
+	}
+
+	if(d->sign.cert().isNull())
+	{
+		d->sign.setCert(signCert);
+		Q_EMIT signDataChanged(d->sign);
+	}
+}

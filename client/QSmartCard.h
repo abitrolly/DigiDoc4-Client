@@ -21,6 +21,7 @@
 
 #include <QThread>
 #include <QSharedDataPointer>
+#include "QSigner.h"
 
 template<class Key, class T> class QHash;
 class SslCertificate;
@@ -141,7 +142,7 @@ public:
 		OldNewPinSameError
 	};
 
-	explicit QSmartCard( QObject *parent = 0 );
+	explicit QSmartCard(QSigner *signer, QObject *parent = nullptr);
 	~QSmartCard();
 
 	QMap<QString, QSharedPointer<QCardInfo>> cache() const;
@@ -168,6 +169,7 @@ private:
 	bool readCardData( const QMap<QString,QString> &cards, const QString &card, bool selectedCard );
 	
 	QSmartCardPrivate *d;
+	QSigner *signer;
 
 	friend class MainWindow;
 };

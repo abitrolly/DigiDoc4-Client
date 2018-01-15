@@ -24,9 +24,10 @@
 
 class QMutex;
 class QSignerPrivate;
+class SslCertificate;
 class TokenData;
 
-class QSigner: public QThread, public digidoc::Signer
+class QSigner: public QObject, public digidoc::Signer
 {
 	Q_OBJECT
 
@@ -51,6 +52,7 @@ public:
 	digidoc::X509Cert cert() const override;
 	ErrorCode decrypt(const QByteArray &in, QByteArray &out, const QString &digest, int keySize,
 		const QByteArray &algorithmID, const QByteArray &partyUInfo, const QByteArray &partyVInfo);
+	void select(const TokenData &authToken, const TokenData &signToken);
 	std::vector<unsigned char> sign( const std::string &method,
 		const std::vector<unsigned char> &digest ) const override;
 	TokenData tokenauth() const;
@@ -67,12 +69,13 @@ private Q_SLOTS:
 	void showWarning( const QString &msg );
 
 private:
+	void init();
 	void reloadauth() const;
 	void reloadsign() const;
-	void run() override;
 	void throwException( const QString &msg, digidoc::Exception::ExceptionCode code, int line ) const;
+	void update(const SslCertificate &authCert, const SslCertificate &signCert);
 
 	QSignerPrivate *d;
 
-	friend class MainWindow;
+	friend class QSmartCard;
 };

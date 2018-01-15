@@ -324,7 +324,7 @@ Application::Application( int &argc, char **argv )
 	{
 		digidoc::Conf::init( new DigidocConf );
 		d->signer = new QSigner( api, this );
-		d->smartcard = new QSmartCard( this );
+		d->smartcard = new QSmartCard(d->signer, this);
 		d->smartcard->start();
 
 		auto readVersion = [](const QString &path) -> uint {
