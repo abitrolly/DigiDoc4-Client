@@ -205,8 +205,16 @@ void QSigner::reloadsign() const
 
 void QSigner::select(const TokenData &authToken, const TokenData &signToken)
 {
+#ifdef Q_OS_WIN
+	d->auth = authToken;
+	d->auth.setCert(QSslCertificate());
+	d->sign = signToken;
+	d->sign.setCert(QSslCertificate());
+	update();
+#else
 	Q_EMIT signDataChanged(d->auth = authToken);
 	Q_EMIT signDataChanged(d->sign = signToken);
+#endif
 }
 
 void QSigner::selectAuthCard( const QString &card )
@@ -301,6 +309,35 @@ void QSigner::throwException( const QString &msg, Exception::ExceptionCode code,
 TokenData QSigner::tokenauth() const { return d->auth; }
 TokenData QSigner::tokensign() const { return d->sign; }
 
+#ifdef Q_OS_WIN
+void QSigner::update()
+{
+	if(!d->win)
+		return;
+
+	QWin::Certs certs = d->win->certs();
+	for (QWin::Certs::const_iterator i = certs.constBegin(); i != certs.constEnd(); ++i)
+	{
+		if (d->auth.cert().isNull() && i.value() == d->auth.card() &&
+			(i.key().keyUsage().contains(SslCertificate::KeyEncipherment) ||
+			i.key().keyUsage().contains(SslCertificate::KeyAgreement)))
+		{
+			d->auth.setCert(i.key());
+			Q_EMIT authDataChanged(d->auth);
+		}
+		if (d->sign.cert().isNull() && i.value() == d->sign.card() &&
+						i.key().keyUsage().contains(SslCertificate::NonRepudiation))
+		{
+			d->sign.setCert(i.key());
+			Q_EMIT signDataChanged(d->sign);
+		}
+		if(!d->auth.cert().isNull() && !d->sign.cert().isNull())
+		{
+			break;
+		}
+	}
+}
+#else
 void QSigner::update(const SslCertificate &authCert, const SslCertificate &signCert)
 {
 	if(d->auth.cert().isNull())
@@ -315,3 +352,4 @@ void QSigner::update(const SslCertificate &authCert, const SslCertificate &signC
 		Q_EMIT signDataChanged(d->sign);
 	}
 }
+#endif

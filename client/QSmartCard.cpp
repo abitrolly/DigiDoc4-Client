@@ -680,7 +680,11 @@ void QSmartCard::run()
 			{
 				if(!d->t.isNull())
 				{
+#ifdef Q_OS_WIN
+					signer->update();
+#else
 					signer->update(d->t.authCert(), d->t.signCert());
+#endif
 				}
 				else
 				{

@@ -73,7 +73,11 @@ private:
 	void reloadauth() const;
 	void reloadsign() const;
 	void throwException( const QString &msg, digidoc::Exception::ExceptionCode code, int line ) const;
+#ifdef Q_OS_WIN
+	void update();
+#else
 	void update(const SslCertificate &authCert, const SslCertificate &signCert);
+#endif
 
 	QSignerPrivate *d;
 
