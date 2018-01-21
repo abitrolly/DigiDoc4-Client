@@ -48,7 +48,6 @@ public:
 		const BIGNUM *inv, const BIGNUM *rp, EC_KEY *eckey);
 
 	QSharedPointer<QPCSCReader> reader;
-	QMutex			m;
 	QSmartCardData	t;
 	QMap<QString, QSharedPointer<QCardInfo>> cache;
 	volatile bool	terminate = false;
