@@ -448,6 +448,22 @@ Media type: %3</translation>
         <source>Surname</source>
         <translation>SURNAME</translation>
     </message>
+    <message>
+        <source>NAME</source>
+        <translation>NAME</translation>
+    </message>
+    <message>
+        <source>SERIAL</source>
+        <translation>SERIAL</translation>
+    </message>
+    <message>
+        <source>COUNTRY</source>
+        <translation>COUNTRY</translation>
+    </message>
+    <message>
+        <source>DEVICE</source>
+        <translation>DEVICE</translation>
+    </message>
 
     <message>
         <source>SAVE THE PICTURE</source>
@@ -456,6 +472,10 @@ Media type: %3</translation>
     <message>
         <source>You're using Digital identity card</source>
         <translation>You're using Digital identity card</translation>
+    </message>
+    <message>
+        <source>You're using e-Seal</source>
+        <translation>You're using e-Seal</translation>
     </message>
     <message>
         <source>Valid</source>
@@ -3124,6 +3144,10 @@ ID-CARD</translation>
     <message>
         <source>Digi ID</source>
         <translation>Digi-ID</translation>
+    </message>
+    <message>
+        <source>e-Seal</source>
+        <translation>e-Seal</translation>
     </message>
 </context>
 

@@ -33,6 +33,7 @@ VerifyCert::VerifyCert(QWidget *parent) :
 	ui(new Ui::VerifyCert),
 	isValidCert(false),
 	isBlockedPin(false),
+	isTempelType(false),
 	pinType(QSmartCardData::Pin1Type)
 {
 	ui->setupUi( this );
@@ -66,6 +67,8 @@ VerifyCert::VerifyCert(QWidget *parent) :
 	ui->forgotPinLink->setFont( regular12 );
 	ui->details->setFont( regular12 );
 	ui->changePIN->setFont( Styles::font( Styles::Condensed, 14 ) );
+	ui->tempelText->setFont( Styles::font( Styles::Regular, 14 ) );
+	ui->tempelText->hide();
 	borders = " border: solid #DFE5E9; border-width: 1px 0px 0px 0px; ";
 }
 
@@ -80,17 +83,28 @@ void VerifyCert::addBorders()
 	borders = " border: solid #DFE5E9; border-width: 1px 1px 0px 1px; ";
 }
 
+void VerifyCert::update(QSmartCardData::PinType type, const SslCertificate &cert)
+{
+	pinType = type;
+	c = cert;
+	isTempelType = cert.type() & SslCertificate::TempelType;
+	
+	update();
+}
+
 void VerifyCert::update( QSmartCardData::PinType type, const QSmartCard *pSmartCard )
 {
-	this->pinType = type;
-	this->cardData = pSmartCard->data();
+	pinType = type;
+	cardData = pSmartCard->data();
+	c = (pinType == QSmartCardData::Pin1Type) ? cardData.authCert() : cardData.signCert();
+	isBlockedPin = (cardData.retryCount( pinType ) == 0) ? true : false;
 	
 	update();
 }
 
 void VerifyCert::update(bool showWarning)
 {
-	bool isBlockedPuk = cardData.retryCount( QSmartCardData::PukType ) == 0;
+	bool isBlockedPuk = !cardData.isNull() && (cardData.retryCount( QSmartCardData::PukType ) == 0);
 
 	QString name;
 	QString changeBtn;
@@ -101,9 +115,7 @@ void VerifyCert::update(bool showWarning)
 	QTextStream cert( &txt );
 
 
-	SslCertificate c = ( pinType == QSmartCardData::Pin1Type ) ? cardData.authCert() : cardData.signCert();
 	this->isValidCert = c.isValid();
-	this->isBlockedPin = (cardData.retryCount( pinType ) == 0) ? true : false;
 	ui->changePIN->show();
 
 	if( !isValidCert )
@@ -118,7 +130,7 @@ void VerifyCert::update(bool showWarning)
 				.arg(DateTime(c.expiryDate().toLocalTime()).formatDate("dd. MMMM yyyy"));
 
 		int leftDays = std::max<int>( 0, QDateTime::currentDateTime().daysTo( c.expiryDate().toLocalTime() ) );
-		if( leftDays <= 105 && cardData.retryCount( pinType ) != 0 )
+		if( leftDays <= 105 && !isBlockedPin )
 			cert << "<br /><span style='color: red'>" << tr("Certificate expires in %1 days").arg( leftDays ) << "</span>";
 	}
 	switch( pinType )
@@ -126,7 +138,7 @@ void VerifyCert::update(bool showWarning)
 	case QSmartCardData::Pin1Type:
 		name = tr("Authentication certificate");
 		changeBtn = isBlockedPin ? tr("UNBLOCK") : tr("CHANGE PIN1");
-		if(cardData.isSecurePinpad())
+		if(!cardData.isNull() && cardData.isSecurePinpad())
 			forgotPinText = "";
 		else
 			forgotPinText = tr("%1Forgot PIN%2?%3")
@@ -141,7 +153,7 @@ void VerifyCert::update(bool showWarning)
 	case QSmartCardData::Pin2Type:
 		name = tr("Signing certificate");
 		changeBtn = isBlockedPin ? tr("UNBLOCK") : tr("CHANGE PIN2");
-		if(cardData.isSecurePinpad())
+		if(!cardData.isNull() && cardData.isSecurePinpad())
 			forgotPinText = "";
 		else
 			forgotPinText = tr("%1Forgot PIN%2?%3")
@@ -237,7 +249,7 @@ void VerifyCert::update(bool showWarning)
 	ui->name->setTextFormat( Qt::RichText );
 
 	ui->forgotPinLink->setText( forgotPinText );
-	ui->forgotPinLink->setVisible( !forgotPinText.isEmpty() );
+	ui->forgotPinLink->setVisible( !(forgotPinText.isEmpty() || isTempelType));
 
 	ui->details->setText( detailsText );
 	ui->details->setVisible( !detailsText.isEmpty() );
@@ -264,7 +276,16 @@ void VerifyCert::update(bool showWarning)
 	else
 		ui->error->setVisible( isBlockedPin );
 	ui->error->setText( error );
-	ui->changePIN->setText( changeBtn );
+	if(isTempelType)
+	{
+		ui->changePIN->hide();
+		ui->tempelText->show();
+	}
+	else
+	{
+		ui->changePIN->setText(changeBtn);
+		ui->tempelText->hide();
+	}
 }
 
 void VerifyCert::enterEvent( QEvent * event )

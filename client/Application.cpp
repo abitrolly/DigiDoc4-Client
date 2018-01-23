@@ -22,8 +22,8 @@
 #include "Application.h"
 
 #include "MainWindow.h"
+#include "QCardInfo.h"
 #include "QSigner.h"
-#include "QSmartCard.h"
 #include "DigiDoc.h"
 #include "dialogs/FirstRun.h"
 #include "dialogs/WaitDialog.h"
@@ -324,9 +324,8 @@ Application::Application( int &argc, char **argv )
 	try
 	{
 		digidoc::Conf::init( new DigidocConf );
-		d->signer = new QSigner( api, this );
-		d->smartcard = new QSmartCard( this );
-		d->smartcard->start();
+		d->smartcard = new QSmartCard(this);
+		d->signer = new QSigner(api, d->smartcard, this);
 
 		auto readVersion = [](const QString &path) -> uint {
 			QFile f(path);

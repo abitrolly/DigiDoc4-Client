@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "QSmartCard.h"
+#include "QCardInfo.h"
 #include "Styles.h"
 #include "widgets/StyledWidget.h"
 

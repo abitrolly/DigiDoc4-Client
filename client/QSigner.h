@@ -19,10 +19,12 @@
 
 #pragma once
 
+#include "QSmartCard.h"
+
 #include <QtCore/QThread>
 #include <digidocpp/crypto/Signer.h>
 
-class QMutex;
+struct QCardInfo;
 class QSignerPrivate;
 class TokenData;
 
@@ -45,9 +47,10 @@ public:
 		DecryptFailed,
 		DecryptOK
 	};
-	explicit QSigner( ApiType api, QObject *parent = 0 );
+	explicit QSigner( ApiType api, QSmartCard *signer, QObject *parent = 0 );
 	~QSigner();
 
+	const QMap<QString, QSharedPointer<QCardInfo>> cache() const;
 	digidoc::X509Cert cert() const override;
 	ErrorCode decrypt(const QByteArray &in, QByteArray &out, const QString &digest, int keySize,
 		const QByteArray &algorithmID, const QByteArray &partyUInfo, const QByteArray &partyVInfo);
@@ -67,12 +70,14 @@ private Q_SLOTS:
 	void showWarning( const QString &msg );
 
 private:
+	void cacheCardData(const QSet<QString> &cards);
 	void reloadauth() const;
 	void reloadsign() const;
 	void run() override;
 	void throwException( const QString &msg, digidoc::Exception::ExceptionCode code, int line ) const;
 
 	QSignerPrivate *d;
+	QSmartCard *smartCard;
 
 	friend class MainWindow;
 };

@@ -17,31 +17,16 @@
  *
  */
 
-#pragma once 
+#pragma once
 
-#include "common_enums.h"
-#include "QCardInfo.h"
-#include "widgets/CardWidget.h"
-#include "widgets/StyledWidget.h"
+#include <QString>
 
-#include <common/TokenData.h>
-
-#include <QMap>
-#include <QSharedPointer>
-
-class CardPopup : public StyledWidget
+struct QCardInfo
 {
-	Q_OBJECT
-
-public:
-	explicit CardPopup(const TokenData &token, const QMap<QString, QSharedPointer<QCardInfo>> &cache,
-		QWidget *parent = nullptr);
-
-	void update(const QMap<QString, QSharedPointer<QCardInfo>> &cache);
-
-signals:
-	void activated(const QString &card);
-
-private:
-	QList<CardWidget*> cardWidgets;
+	QString id;
+	QString fullName;
+	QString cardType;
+	QString country;
+	int type;
+	bool loading;
 };

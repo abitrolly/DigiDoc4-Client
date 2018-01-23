@@ -22,6 +22,8 @@
 #include "widgets/StyledWidget.h"
 #include "QSmartCard.h"
 
+#include <common/SslCertificate.h>
+
 namespace Ui {
 class VerifyCert;
 }
@@ -37,6 +39,7 @@ public:
 	~VerifyCert();
 
 	void addBorders();
+	void update(QSmartCardData::PinType type, const SslCertificate &cert);
 	void update(QSmartCardData::PinType type, const QSmartCard *smartCard);
 	void update(bool warning = false);
 
@@ -62,6 +65,7 @@ private:
 
 	bool isValidCert;
 	bool isBlockedPin;
+	bool isTempelType;
 	QString borders;
 
 	QSvgWidget* greenIcon;
@@ -70,4 +74,5 @@ private:
 
 	QSmartCardData::PinType pinType;
 	QSmartCardData cardData;
+	SslCertificate c;
 };

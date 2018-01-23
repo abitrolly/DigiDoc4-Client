@@ -449,12 +449,33 @@ Media type: %3</source>
         <translation>ФАМИЛИЯ</translation>
     </message>
     <message>
+        <source>NAME</source>
+        <translation>ИМЯ</translation>
+    </message>
+    <message>
+        <source>SERIAL</source>
+        <translation>СЕРИЙНЫЙ НОМЕР</translation>
+    </message>
+    <message>
+        <source>COUNTRY</source>
+        <translation>КОД СТРАНЫ</translation>
+    </message>
+    <message>
+        <source>DEVICE</source>
+        <translation>УСТРОЙСТВО</translation>
+    </message>
+
+    <message>
         <source>SAVE THE PICTURE</source>
         <translation>СОХРАНИТЬ ФОТО</translation>
     </message>
     <message>
         <source>You're using Digital identity card</source>
         <translation>Вы используете дигитальное удостоверение личности</translation>
+    </message>
+    <message>
+        <source>You're using e-Seal</source>
+        <translation>Вы используете э-Печать</translation>
     </message>
     <message>
         <source>Valid</source>
@@ -3130,6 +3151,10 @@ ID-КАРТОЙ</translation>
     <message>
         <source>Digi ID</source>
         <translation>Digi-ID</translation>
+    </message>
+    <message>
+        <source>e-Seal</source>
+        <translation>э-Печать</translation>
     </message>
 </context>
 

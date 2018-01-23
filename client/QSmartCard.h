@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <QThread>
+#include <QObject>
 #include <QSharedDataPointer>
 
 template<class Key, class T> class QHash;
@@ -105,27 +105,8 @@ private:
 
 
 
-struct QCardInfo
-{
-	explicit QCardInfo( const QCardInfo& id ) = default;
-	explicit QCardInfo( const QString& id );
-	explicit QCardInfo( const QSmartCardData &scd );
-	explicit QCardInfo( const QSmartCardDataPrivate &scdp );
-
-	QString id;
-	QString fullName;
-	QString cardType;
-	bool loading;
-
-private:
-	void setFullName( const QString &firstName1, const QString &firstName2, const QString &surName );
-	void setCardType( const SslCertificate &cert );
-};
-
-
-
 class QSmartCardPrivate;
-class QSmartCard: public QThread
+class QSmartCard: public QObject
 {
 	Q_OBJECT
 public:
@@ -141,16 +122,16 @@ public:
 		OldNewPinSameError
 	};
 
-	explicit QSmartCard( QObject *parent = 0 );
+	explicit QSmartCard(QObject *parent = nullptr);
 	~QSmartCard();
 
-	QMap<QString, QSharedPointer<QCardInfo>> cache() const;
 	ErrorType change( QSmartCardData::PinType type, const QString &newpin, const QString &pin, const QString &title, const QString &bodyText );
 	QSmartCardData data() const;
 	Qt::HANDLE key();
 	ErrorType login( QSmartCardData::PinType type );
 	void logout();
 	void reload();
+	void reloadCard(const QString &card);
 	ErrorType unblock( QSmartCardData::PinType type, const QString &pin, const QString &puk, const QString &title, const QString &bodyText );
 
 	ErrorType pinUnblock( QSmartCardData::PinType type, bool isForgotPin = false );
@@ -164,7 +145,6 @@ private Q_SLOTS:
 	void selectCard( const QString &card );
 
 private:
-	void run();
 	bool readCardData( const QMap<QString,QString> &cards, const QString &card, bool selectedCard );
 	
 	QSmartCardPrivate *d;

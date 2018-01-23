@@ -24,6 +24,10 @@
 #include "Styles.h"
 #include "widgets/LabelButton.h"
 
+#include <common/SslCertificate.h>
+
+#include <QSvgWidget>
+
 using namespace ria::qdigidoc4;
 
 CardWidget::CardWidget( QWidget *parent )
@@ -110,6 +114,15 @@ void CardWidget::update(const QSharedPointer<const QCardInfo> &ci)
 	{
 		ui->cardStatus->setText(tr("%1 in reader").arg(tr(cardInfo->cardType.toLatin1())));
 		cardIcon->load(QString(":/images/icon_IDkaart_green.svg"));
+	}
+
+	if(cardInfo->type & SslCertificate::TempelType)
+	{
+		QSvgWidget* seal = new QSvgWidget(ui->cardPhoto);
+		seal->load(QString(":/images/icon_digitempel.svg"));
+		seal->resize(34, 34);
+		seal->move(0, 5);
+		ui->cardPhoto->setStyleSheet("border: none;");
 	}
 
 	setAccessibleDescription(cardInfo->fullName);

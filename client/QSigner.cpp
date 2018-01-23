@@ -18,7 +18,6 @@
  */
 
 #include "QSigner.h"
-#include "QCardLock.h"
 
 #include "Application.h"
 
@@ -28,6 +27,8 @@
 #else
 class QWin;
 #endif
+#include "QCardInfo.h"
+#include "QCardLock.h"
 #include "QPKCS11.h"
 #include <common/TokenData.h>
 
@@ -37,7 +38,9 @@ class QWin;
 #include <QtCore/QEventLoop>
 #include <QtCore/QStringList>
 #include <QtCore/QSysInfo>
+#include <QDebug>
 #include <QtNetwork/QSslKey>
+#include <QSet>
 
 #include <openssl/obj_mac.h>
 
@@ -45,9 +48,33 @@ class QWin;
 template <class T>
 constexpr typename std::add_const<T>::type& qAsConst(T& t) noexcept
 {
-        return t;
+	return t;
 }
 #endif
+
+
+QCardInfo *toCardInfo(const SslCertificate &c)
+{
+	QCardInfo *ci = new QCardInfo;
+
+	ci->country = c.toString("C");
+	ci->id = c.subjectInfo("serialNumber");
+	ci->loading = false;
+	ci->type = c.type();
+
+	if(c.type() & SslCertificate::TempelType)
+	{
+		ci->fullName = c.toString("CN");
+		ci->cardType = "e-Seal";
+	}
+	else
+	{
+		ci->fullName = c.toString("GN SN");
+		ci->cardType = c.type() & SslCertificate::DigiIDType ? "Digi ID" : "ID Card";
+	}
+
+	return ci;
+}
 
 class QSignerPrivate
 {
@@ -57,13 +84,15 @@ public:
 	QPKCS11Stack	*pkcs11 = nullptr;
 	TokenData		auth, sign;
 	volatile bool	terminate = false;
+	QMap<QString, QSharedPointer<QCardInfo>> cache;
 };
 
 using namespace digidoc;
 
-QSigner::QSigner( ApiType api, QObject *parent )
+QSigner::QSigner(ApiType api, QSmartCard* sc, QObject *parent)
 :	QThread( parent )
 ,	d( new QSignerPrivate )
+,	smartCard( sc )
 {
 	d->api = api;
 	d->auth.setCard( "loading" );
@@ -77,6 +106,35 @@ QSigner::~QSigner()
 	d->terminate = true;
 	wait();
 	delete d;
+}
+
+const QMap<QString, QSharedPointer<QCardInfo>> QSigner::cache() const { return d->cache; }
+
+void QSigner::cacheCardData(const QSet<QString> &cards)
+{
+#ifdef Q_OS_WIN
+	if(d->win)
+	{
+		for(QWin::Certs::const_iterator i = certs.constBegin(); i != certs.constEnd(); ++i)
+		{
+			if(!d->cache.contains(i.value()) && i.key().keyUsage().contains(SslCertificate::NonRepudiation))
+				cache.insert(i.value(), QSharedPointer<QCardInfo>(toCardInfo(i.key())));
+		}
+	}
+	else
+#endif
+	{
+		QList<TokenData> pkcs11 = d->pkcs11->tokens();
+		for(const TokenData &i: qAsConst(pkcs11))
+		{
+			if(!d->cache.contains(i.card()))
+			{
+				auto sslCert = SslCertificate(i.cert());
+				if(sslCert.keyUsage().contains(SslCertificate::NonRepudiation))
+					d->cache.insert(i.card(), QSharedPointer<QCardInfo>(toCardInfo(sslCert)));
+			}
+		}
+	}
 }
 
 X509Cert QSigner::cert() const
@@ -245,6 +303,8 @@ void QSigner::run()
 				scards.removeDuplicates();
 				readers = d->pkcs11->readers();
 			}
+			qDebug() << "Readers:" << readers;
+			qDebug() << "Cards in reader:" << scards;
 
 			std::sort( acards.begin(), acards.end(), TokenData::cardsOrder );
 			std::sort( scards.begin(), scards.end(), TokenData::cardsOrder );
@@ -335,11 +395,18 @@ void QSigner::run()
 				}
 			}
 
+			auto added = scards.toSet().subtract(d->cache.keys().toSet());
+			if(!added.isEmpty())
+				cacheCardData(added);
+
 			// update data if something has changed
 			if( aold != at )
 				Q_EMIT authDataChanged(d->auth = at);
 			if( sold != st )
+			{
+				smartCard->reloadCard(st.card());
 				Q_EMIT signDataChanged(d->sign = st);
+			}
 			QCardLock::instance().readUnlock();
 		}
 

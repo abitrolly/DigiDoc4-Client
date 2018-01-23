@@ -27,6 +27,8 @@ class Accordion;
 }
 
 class AccordionTitle;
+class QCardInfo;
+
 
 class Accordion : public StyledWidget
 {
@@ -43,6 +45,7 @@ public:
 	void idCheckOtherEIdNeeded( AccordionTitle* opened );
 	void setFocusToEmail();
 	void updateDigiIdInfo();
+	void updateInfo(const QCardInfo &cardInfo, const SslCertificate &authCert, const SslCertificate &signCert);
 	void updateInfo( const QSmartCard *smartCard );
 	void updateMobileIdInfo();
 	void updateOtherData( bool activate, const QString &eMail = "", const quint8 &errorCode = 0 );

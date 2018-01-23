@@ -20,6 +20,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "Application.h"
+#include "QCardInfo.h"
 #include "QCardLock.h"
 #include "QSigner.h"
 #include "XmlReader.h"
@@ -105,17 +106,17 @@ void MainWindow::pinUnblock( QSmartCardData::PinType type, bool isForgotPin )
 		ui->accordion->updateInfo( qApp->smartcard() );
 		updateCardWarnings();
 
-		QCardInfo cardInfo(qApp->smartcard()->data());
+		QString card = qApp->smartcard()->data().card();
 
 		if (type == QSmartCardData::Pin1Type)
 		{
 			clearWarning(UNBLOCK_PIN1_WARNING);
-			emit ui->cryptoContainerPage->cardChanged(cardInfo.id);
+			emit ui->cryptoContainerPage->cardChanged(card);
 		}
 		if (type == QSmartCardData::Pin2Type)
 		{
 			clearWarning(UNBLOCK_PIN2_WARNING);
-			emit ui->signContainerPage->cardChanged(cardInfo.id);
+			emit ui->signContainerPage->cardChanged(card);
 		}
 	}
 }
@@ -133,7 +134,7 @@ void MainWindow::pinPukChange( QSmartCardData::PinType type )
 
 void MainWindow::certDetailsClicked( const QString &link )
 {
-	CertificateDetails dlg( (link == "PIN1") ? qApp->smartcard()->data().authCert() : qApp->smartcard()->data().signCert(), this );
+	CertificateDetails dlg( (link == "PIN1") ? qApp->signer()->tokensign().cert() : qApp->signer()->tokenauth().cert(), this );
 	dlg.exec();
 }
 
