@@ -33,6 +33,7 @@
 InfoStack::InfoStack( QWidget *parent )
 : StyledWidget( parent )
 , ui( new Ui::InfoStack )
+, sealWidget(nullptr)
 , appletVersion()
 , certType(0)
 , certIsValid(false)
@@ -167,11 +168,14 @@ void InfoStack::update()
 		ui->valueSerialNumber->setMinimumWidth(300);
 		ui->valueSerialNumber->setMaximumWidth(300);
 
-		QSvgWidget* seal = new QSvgWidget(ui->photo);
+		clearPicture();
+		QSvgWidget *seal = new QSvgWidget(ui->photo);
 		seal->load(QString(":/images/icon_digitempel.svg"));
 		seal->resize(100, 100);
 		seal->move(10, 25);
 		seal->setStyleSheet("border: none;");
+		seal->show();
+		sealWidget = seal;
 		ui->btnPicture->hide();
 	}
 	else
@@ -183,6 +187,15 @@ void InfoStack::update()
 		ui->labelSerialNumber->setText(tr("Document"));
 		ui->valueSerialNumber->setMinimumWidth(100);
 		ui->valueSerialNumber->setMaximumWidth(100);
+
+		if(sealWidget)
+		{
+			sealWidget->hide();
+			sealWidget->close();
+			delete sealWidget;
+			sealWidget = nullptr;
+		}
+		ui->btnPicture->show();
 	}
 }
 

@@ -27,7 +27,7 @@ class Accordion;
 }
 
 class AccordionTitle;
-class QCardInfo;
+struct QCardInfo;
 
 
 class Accordion : public StyledWidget

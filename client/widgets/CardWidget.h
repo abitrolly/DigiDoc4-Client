@@ -60,4 +60,5 @@ private:
 	QString cardId;
 	QScopedPointer<QSvgWidget> cardIcon;
 	QSharedPointer<const QCardInfo> cardInfo;
+	QWidget *sealWidget;
 };

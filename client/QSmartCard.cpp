@@ -598,6 +598,7 @@ void QSmartCard::reloadCard(const QString &card)
 	// read card data
 	if(d->t.cards().contains(d->t.card()) && d->t.isNull())
 	{
+		qDebug() << "Read card" << card << "info";
 		if(readCardData( cards, d->t.card(), true ))
 		{
 			qDebug() << "Failed to read card info, try again next round";
@@ -727,6 +728,7 @@ bool QSmartCard::readCardData( const QMap<QString,QString> &cards, const QString
 		if( selectedCard && !tryAgain )
 		{
 			d->t.d = t;
+			emit dataChanged(); 
 		}
 	}
 

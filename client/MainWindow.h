@@ -81,6 +81,7 @@ private Q_SLOTS:
 	void photoClicked( const QPixmap *photo );
 	void savePhoto( const QPixmap *photo );
 	void showCardStatus();
+	void showSignerStatus();
 	void warningClicked(const QString &link);
 	void removeOldCert();
 

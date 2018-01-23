@@ -87,7 +87,6 @@ void VerifyCert::update(QSmartCardData::PinType type, const SslCertificate &cert
 {
 	pinType = type;
 	c = cert;
-	isTempelType = cert.type() & SslCertificate::TempelType;
 	
 	update();
 }
@@ -115,6 +114,7 @@ void VerifyCert::update(bool showWarning)
 	QTextStream cert( &txt );
 
 
+	this->isTempelType = c.type() & SslCertificate::TempelType;
 	this->isValidCert = c.isValid();
 	ui->changePIN->show();
 

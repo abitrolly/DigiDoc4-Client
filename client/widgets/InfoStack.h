@@ -55,6 +55,7 @@ private:
 	void update();
 
 	Ui::InfoStack *ui;
+	QWidget* sealWidget;
 
 	QString appletVersion;
 	int certType;

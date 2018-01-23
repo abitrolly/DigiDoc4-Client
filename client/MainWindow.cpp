@@ -123,7 +123,8 @@ MainWindow::MainWindow( QWidget *parent ) :
 	setAcceptDrops( true );
 
 	// Refresh ID card info in card widget
-	connect( qApp->signer(), &QSigner::signDataChanged, this, &MainWindow::showCardStatus );
+	connect( qApp->signer(), &QSigner::signDataChanged, this, &MainWindow::showSignerStatus );
+	connect( qApp->smartcard(), &QSmartCard::dataChanged, this, &MainWindow::showCardStatus );
 	// TODO
 	// Refresh card info in card pop-up menu
 	connect( qApp->smartcard(), &QSmartCard::dataLoaded, this, &MainWindow::updateCardData );
@@ -156,7 +157,7 @@ MainWindow::MainWindow( QWidget *parent ) :
 	connect(ui->cardInfo, &CardWidget::selected, this, [this]() { if( selector ) selector->press(); });
 	connect(ui->accordion, &Accordion::checkOtherEID, this, &MainWindow::getOtherEID);
 
-	showCardStatus();
+	showSignerStatus();
 	connect(ui->accordion, &Accordion::changePin1Clicked, this, &MainWindow::changePin1Clicked);
 	connect(ui->accordion, &Accordion::changePin2Clicked, this, &MainWindow::changePin2Clicked);
 	connect(ui->accordion, &Accordion::changePukClicked, this, &MainWindow::changePukClicked);
@@ -990,8 +991,23 @@ void MainWindow::showCardMenu( bool show )
 void MainWindow::showCardStatus()
 {
 	Application::restoreOverrideCursor();
+	QSmartCardData t = qApp->smartcard()->data();
+
+	if(!t.card().isEmpty() && !t.signCert().isNull())
+	{
+		ui->infoStack->update(t);
+		ui->accordion->updateInfo(qApp->smartcard());
+		ui->myEid->invalidIcon(!t.authCert().isValid() || !t.authCert().isValid());
+		updateCardWarnings();
+		showIdCardAlerts(t);
+		showPinBlockedWarning(t);
+	}
+}
+
+void MainWindow::showSignerStatus()
+{
+	Application::restoreOverrideCursor();
 	TokenData t = qApp->signer()->tokensign();
-	QSmartCardData sc = qApp->smartcard()->data();
 
 	closeWarnings(-1);
 
@@ -1012,18 +1028,11 @@ void MainWindow::showCardStatus()
 		{
 			Styles::cachedPicture(cardInfo->id, {ui->cardInfo, ui->infoStack});
 		}
-		// TODO
-		ui->infoStack->update(*cardInfo);
-		// TODO
-		ui->accordion->updateInfo(*cardInfo, qApp->signer()->tokenauth().cert(), t.cert());
-		// TODO
-		// ui->myEid->invalidIcon(!sc.authCert().isValid() || !sc.authCert().isValid());
-		// TODO
-		// updateCardWarnings();
-		// TODO
-		// showIdCardAlerts(sc);
-		// TODO
-		// showPinBlockedWarning(sc);
+		else if(cardInfo->type & SslCertificate::TempelType)
+		{
+			ui->infoStack->update(*cardInfo);
+			ui->accordion->updateInfo(*cardInfo, qApp->signer()->tokenauth().cert(), t.cert());
+		}
 	}
 	else
 	{
@@ -1155,6 +1164,7 @@ void MainWindow::updateCardData()
 
 void MainWindow::noReader_NoCard_Loading_Event(NoCardInfo::Status status)
 {
+    qDebug() << "noReader_NoCard_Loading_Event" << status;
 	ui->idSelector->hide();
 	if(status == NoCardInfo::Loading)
 		Application::setOverrideCursor(Qt::BusyCursor);

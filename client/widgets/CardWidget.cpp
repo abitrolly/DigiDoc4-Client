@@ -37,6 +37,7 @@ CardWidget::CardWidget( const QString &cardId, QWidget *parent )
 : StyledWidget( parent )
 , ui( new Ui::CardWidget )
 , cardId( cardId )
+, sealWidget(nullptr)
 {
 	ui->setupUi( this );
 	QFont font = Styles::font( Styles::Condensed, 16 );
@@ -118,12 +119,23 @@ void CardWidget::update(const QSharedPointer<const QCardInfo> &ci)
 
 	if(cardInfo->type & SslCertificate::TempelType)
 	{
+		ui->cardPhoto->clear();
 		QSvgWidget* seal = new QSvgWidget(ui->cardPhoto);
 		seal->load(QString(":/images/icon_digitempel.svg"));
-		seal->resize(34, 34);
-		seal->move(0, 5);
-		ui->cardPhoto->setStyleSheet("border: none;");
+		seal->resize(32, 32);
+		seal->move(1, 6);
+		seal->show();
+		seal->setStyleSheet("border: none;");
+		sealWidget = seal;
 	}
+	else if(sealWidget)
+	{
+		sealWidget->hide();
+		sealWidget->close();
+		delete sealWidget;
+		sealWidget = nullptr;
+	}
+
 
 	setAccessibleDescription(cardInfo->fullName);
 }
