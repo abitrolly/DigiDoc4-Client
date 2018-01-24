@@ -145,7 +145,11 @@ void InfoStack::update()
 		else
 			st << "<span style='color: #e80303;'>" << tr("Expired") << "</span>";
 	}
-	else if( !(certType & SslCertificate::TempelType))
+	else if(certType & SslCertificate::TempelType)
+	{
+		serialNumberText = tr("You're using e-Seal");
+	}
+	else
 	{
 		st << tr("You're using Digital identity card");
 	}
@@ -229,8 +233,6 @@ void InfoStack::update(const QCardInfo &cardInfo)
 	surnameText = QString();
 	personalCodeText = cardInfo.id;
 	citizenshipText = cardInfo.country;
-	serialNumberText = (certType & SslCertificate::TempelType) ?
-		tr("You're using e-Seal") : QString();
 
 	update();
 }

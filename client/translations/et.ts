@@ -926,6 +926,10 @@ Rohkem infot leiate siit:</translation>
         <source>PUK code is blocked because the PUK code has been entered 3 times incorrectly. Unable to disable the PUK code itself. As long as the PUK code is blocked, all eID options can be used, except PUK code. You can only use the new PUK code with the new code envelope that you can use from PPA.</source>
         <translation>PUK kood on blokeeritud, kuna PUK koodi on sisestatud 3 korda valesti. PUK koodi ei saa ise lahti blokeerida. &lt;br&gt;&lt;br&gt;Kuigi PUK kood on blokeeritud, saab kõiki eID võimalusi kasutada, välja arvatud PUK koodi vajavaid. &lt;br&gt;&lt;br&gt;Uue PUK koodi saad vaid uue koodiümbrikuga, mida &lt;a href='https://www.politsei.ee/et/nouanded/id-kaart-ja-pass/kui-id-kaardi-koodid-kaovad/'&gt;taotle PPA-st&lt;/a&gt;.</translation>
     </message>
+    <message>
+        <source>PIN can be changed only using eToken utility</source>
+        <translation>PIN koodi saab muuta ainult e-Templi tarkvaraga</translation>
+    </message>
 </context>
 
 

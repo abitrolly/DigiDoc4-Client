@@ -925,6 +925,10 @@ Learn more info here:</translation>
         <source>PUK code is blocked because the PUK code has been entered 3 times incorrectly. Unable to disable the PUK code itself. As long as the PUK code is blocked, all eID options can be used, except PUK code. You can only use the new PUK code with the new code envelope that you can use from PPA.</source>
         <translation>PUK code is blocked because the PUK code has been entered 3 times incorrectly. Unable to disable the PUK code itself. &lt;br&gt;&lt;br&gt;As long as the PUK code is blocked, all eID options can be used, except PUK code. &lt;br&gt;&lt;br&gt;You can only use the new PUK code with the new code envelope that you can use &lt;a href='https://www.politsei.ee/en/nouanded/isikut-toendavad-dokumendid/kui-id-kaardi-koodid-kaovad.dot'&gt;from PPA&lt;/a&gt;.</translation>
     </message>
+    <message>
+        <source>PIN can be changed only using eToken utility</source>
+        <translation>PIN can be changed only using eToken utility</translation>
+    </message>
 </context>
 
 

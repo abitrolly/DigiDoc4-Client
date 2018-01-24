@@ -350,10 +350,13 @@ background-color: #F8DDA7;
       <string notr="true">color: #353739; border: none;</string>
      </property>
      <property name="text">
-      <string>PIN can be changed only in eToken utility</string>
+      <string>PIN can be changed only using eToken utility</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
