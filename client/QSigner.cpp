@@ -36,6 +36,7 @@ class QWin;
 
 #include <QtCore/QFile>
 #include <QtCore/QEventLoop>
+#include <QtCore/QLoggingCategory>
 #include <QtCore/QStringList>
 #include <QtCore/QSysInfo>
 #include <QDebug>
@@ -43,6 +44,8 @@ class QWin;
 #include <QSet>
 
 #include <openssl/obj_mac.h>
+
+Q_LOGGING_CATEGORY(SLog, "qdigidoc4.QSigner")
 
 #if QT_VERSION < 0x050700
 template <class T>
@@ -304,8 +307,8 @@ void QSigner::run()
 				scards.removeDuplicates();
 				readers = d->pkcs11->readers();
 			}
-			qDebug() << "Readers:" << readers;
-			qDebug() << "Cards in reader:" << scards;
+			qCDebug(SLog) << "Readers:" << readers;
+			qCDebug(SLog) << "Cards in reader:" << scards;
 
 			std::sort( acards.begin(), acards.end(), TokenData::cardsOrder );
 			std::sort( scards.begin(), scards.end(), TokenData::cardsOrder );
@@ -405,6 +408,7 @@ void QSigner::run()
 				Q_EMIT authDataChanged(d->auth = at);
 			if( sold != st )
 			{
+				qCDebug(SLog) << "Card data changed:" << st.card();
 				smartCard->reloadCard(st.card());
 				Q_EMIT signDataChanged(d->sign = st);
 			}

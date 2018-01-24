@@ -50,13 +50,16 @@
 #include <common/SslCertificate.h>
 #include <common/TokenData.h>
 
-#include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QSvgWidget>
+#include <QtCore/QDebug>
+#include <QtCore/QLoggingCategory>
 #include <QtCore/QUrlQuery>
 #include <QtGui/QDesktopServices>
+
+Q_LOGGING_CATEGORY(MLog, "qdigidoc4.MainWindow")
 
 using namespace ria::qdigidoc4;
 using namespace ria::qdigidoc4::colors;
@@ -850,7 +853,7 @@ void MainWindow::openContainer()
 
 void MainWindow::operation(int op, bool started)
 {
-	qDebug() << "Op " << op << (started ? " started" : " ended");
+	qCDebug(MLog) << "Op" << op << (started ? "started" : "ended");
 }
 
 void MainWindow::resetCryptoDoc(CryptoDoc *doc)
@@ -1018,7 +1021,7 @@ void MainWindow::showSignerStatus()
 		ui->accordion->show();
 		ui->noCardInfo->hide();
 
-		qDebug() << "Select card " << t.card() << " cache " << qApp->signer()->cache();
+		qCDebug(MLog) << "Select card" << t.card();
 		auto cardInfo = qApp->signer()->cache()[t.card()];
 		ui->cardInfo->update(cardInfo);
 		emit ui->signContainerPage->cardChanged(cardInfo->id);
@@ -1164,7 +1167,7 @@ void MainWindow::updateCardData()
 
 void MainWindow::noReader_NoCard_Loading_Event(NoCardInfo::Status status)
 {
-    qDebug() << "noReader_NoCard_Loading_Event" << status;
+	qCDebug(MLog) << "noReader_NoCard_Loading_Event" << status;
 	ui->idSelector->hide();
 	if(status == NoCardInfo::Loading)
 		Application::setOverrideCursor(Qt::BusyCursor);

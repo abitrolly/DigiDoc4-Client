@@ -28,12 +28,15 @@
 
 #include <QtCore/QDateTime>
 #include <QtCore/QDebug>
+#include <QtCore/QLoggingCategory>
 #include <QtCore/QScopedPointer>
 #include <QtNetwork/QSslKey>
 #include <QtWidgets/QApplication>
 
 #include <openssl/evp.h>
 #include <thread>
+
+Q_LOGGING_CATEGORY(CLog, "qdigidoc4.QSmartCard")
 
 const QHash<QByteArray,QSmartCardData::CardVersion> QSmartCardDataPrivate::atrList = {
 	{"3BFE9400FF80B1FA451F034573744549442076657220312E3043", QSmartCardData::VER_1_0}, /*ESTEID_V1_COLD_ATR*/
@@ -110,7 +113,7 @@ QString QSmartCardData::typeString(QSmartCardData::PinType type)
 
 QSharedPointer<QPCSCReader> QSmartCardPrivate::connect(const QString &reader)
 {
-	qDebug() << "Connecting to reader" << reader;
+	qCDebug(CLog) << "Connecting to reader" << reader;
 	QSharedPointer<QPCSCReader> r(new QPCSCReader(reader, &QPCSC::instance()));
 	if(r->connect() && r->beginTransaction())
 		return r;
@@ -508,8 +511,8 @@ void QSmartCard::reloadCard(const QString &card)
 	if(!d->t.isNull() && !d->t.card().isEmpty() && d->t.card() == card)
 		return;
 
-    qDebug() << "Read management info of " << card;
-    
+	qCDebug(CLog) << "Poll" << card;
+
 	QByteArray cardid = d->READRECORD;
 	cardid[2] = 8;
 
@@ -519,14 +522,14 @@ void QSmartCard::reloadCard(const QString &card)
 	if(![&] {
 		for(const QString &name: readers)
 		{
-			qDebug() << "Connecting to reader" << name;
+			qCDebug(CLog) << "Connecting to reader" << name;
 			QScopedPointer<QPCSCReader> reader(new QPCSCReader(name, &QPCSC::instance()));
 			if(!reader->isPresent())
 				continue;
 
 			if(!QSmartCardDataPrivate::atrList.contains(reader->atr()))
 			{
-				qDebug() << "Unknown ATR" << reader->atr();
+				qCDebug(CLog) << "Unknown ATR" << reader->atr();
 				continue;
 			}
 
@@ -567,7 +570,7 @@ void QSmartCard::reloadCard(const QString &card)
 		return true;
 	}())
 	{
-		qDebug() << "Failed to poll card, try again next round";
+		qCDebug(CLog) << "Failed to poll card, try again next round";
 		return;
 	}
 
@@ -598,10 +601,10 @@ void QSmartCard::reloadCard(const QString &card)
 	// read card data
 	if(d->t.cards().contains(d->t.card()) && d->t.isNull())
 	{
-		qDebug() << "Read card" << card << "info";
+		qCDebug(CLog) << "Read card" << card << "info";
 		if(readCardData( cards, d->t.card(), true ))
 		{
-			qDebug() << "Failed to read card info, try again next round";
+			qCDebug(CLog) << "Failed to read card info, try again next round";
 		}
 	}
 }
@@ -722,7 +725,7 @@ bool QSmartCard::readCardData( const QMap<QString,QString> &cards, const QString
 		}
 		if(tryAgain)
 		{
-			qDebug() << "Failed to read card info, try again next round";
+			qCDebug(CLog) << "Failed to read card info, try again next round";
 		}
 
 		if( selectedCard && !tryAgain )
