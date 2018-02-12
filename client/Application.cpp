@@ -22,8 +22,8 @@
 #include "Application.h"
 
 #include "MainWindow.h"
+#include "QCardInfo.h"
 #include "QSigner.h"
-#include "QSmartCard.h"
 #include "DigiDoc.h"
 #include "dialogs/FirstRun.h"
 #include "dialogs/WaitDialog.h"
@@ -255,7 +255,7 @@ public:
 	QAction		*closeAction = nullptr, *newClientAction = nullptr, *newCryptoAction = nullptr;
 	MacMenuBar	*bar = nullptr;
 	QSigner		*signer = nullptr;
-	QSmartCard	*smartcard = nullptr;
+
 	QTranslator	appTranslator, commonTranslator, cryptoTranslator, qtTranslator;
 	QString		lang;
 	QTimer		lastWindowTimer;
@@ -324,9 +324,7 @@ Application::Application( int &argc, char **argv )
 	try
 	{
 		digidoc::Conf::init( new DigidocConf );
-		d->signer = new QSigner( api, this );
-		d->smartcard = new QSmartCard( this );
-		d->smartcard->start();
+		d->signer = new QSigner(api, this);
 
 		auto readVersion = [](const QString &path) -> uint {
 			QFile f(path);
@@ -857,7 +855,7 @@ void Application::showWarning( const QString &msg, const QString &details )
 
 QSigner* Application::signer() const { return d->signer; }
 
-QSmartCard* Application::smartcard() const { return d->smartcard; }
+QSmartCard* Application::smartcard() const { return d->signer->smartcard(); }
 
 QWidget* Application::uniqueRoot()
 {
