@@ -3075,6 +3075,11 @@ MOBIIL-ID’GA</translation>
 ID-KAARDIGA</translation>
     </message>
     <message>
+        <source>SignatureToken</source>
+        <translation>ALLKIRJASTA
+E-TEMPLIGA</translation>
+    </message>
+    <message>
         <source>EncryptContainer</source>
         <translation>KRÜPTEERI</translation>
     </message>
